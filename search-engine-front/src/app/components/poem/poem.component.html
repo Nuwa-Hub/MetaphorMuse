@@ -1,0 +1,43 @@
+<div (click)="clicked()">
+  <div *ngIf="!isClicked">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+            {{ result._source.poemName }} -
+            {{ result._source.line | slice : 0 : 10 }}....
+        </mat-card-title>
+      </mat-card-header>
+    </mat-card>
+  </div>
+  <div *ngIf="isClicked" style="white-space: pre-line">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          {{ result._source.poemName }} 
+        </mat-card-title>
+        <mat-card-subtitle
+          >Artist - {{ result._source.poet }}</mat-card-subtitle
+        >
+        <mat-card-subtitle
+          >Source Domain - {{ result._source.sourceDomain }}</mat-card-subtitle
+        >
+        <mat-card-subtitle
+          >Target Domain - {{ result._source.targetDomain }}</mat-card-subtitle
+        >
+        <mat-card-subtitle
+          >Metorphor Terms -
+          {{ result._source.metorphorTerms }}</mat-card-subtitle
+        >
+        <mat-card-subtitle>Year - {{ result._source.year }}</mat-card-subtitle>
+        <mat-card-subtitle
+          >Poem No - {{ result._source.poemNo }}</mat-card-subtitle
+        >
+      </mat-card-header>
+      <mat-card-content> Line- {{ result._source.line }} </mat-card-content>
+      <mat-card-content>
+        Metophor Meaning-
+        {{ result._source.metophorMeaning }}
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

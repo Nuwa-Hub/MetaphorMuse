@@ -1,0 +1,62 @@
+name: Invoke Load Tests
+on:
+  workflow_dispatch:
+    inputs:
+      tests:
+        description: >
+          List of test names separated by commas
+          Example - route_guide_unary,route_guide_client_streaming
+        required: false
+      clusterName:
+        description: 'Cluster name'
+        required: false
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  invokeLoadTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Process cluster name
+        id: processClusterName
+        run: |
+          clusterName="${{github.event.inputs.clusterName}}"
+          if [ "$clusterName" = "" ]; then
+            clusterName="grpc-perf-cluster-test"
+          fi
+          printf "clusterName=%s" $clusterName >> $GITHUB_OUTPUT
+      - name: Get latest ballerina runtime artifact
+        id: setRuntimeUrl
+        shell: bash
+        run: |
+          printf "runtimeUrl=%s" $(curl -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/ballerina-platform/module-ballerina-grpc/actions/artifacts | \
+            jq '[.artifacts[] | select(.name=="ballerina-runtime" and .expired==false)]|max|.archive_download_url') >> $GITHUB_OUTPUT
+      - name: Format test names
+        id: formatTestNames
+        shell: bash
+        run: |
+          tests="${{github.event.inputs.tests}}"
+          if [ ! "$tests" = "" ]; then
+            testsInput=(${tests//,/ })
+            testsCount=${#testsInput[@]}
+            testsOutput=""
+            for (( i=0; i<$testsCount; i++ ));
+            do
+              echo "${testsInput[$i]}";
+              testsOutput+=\\'"'${testsInput[$i]}\\'"',
+            done
+            echo [${testsOutput:0:-1}]
+            printf "testNames=%s" [${testsOutput:0:-1}] >> $GITHUB_OUTPUT
+          else
+          	printf "testNames=%s" $tests >> $GITHUB_OUTPUT
+          fi
+      - name: Invoke standard library load test workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: showTest
+          repo: dilanSachi/GitWorkflowTest
+          token: ${{ secrets.GIT_PAT }}
+          ref: refs/heads/main
+          inputs: '{ "owner": "${{ steps.formatTestNames.outputs.testNames }}", "repo": ${{ steps.setRuntimeUrl.outputs.runtimeUrl}}, "package": "${{ steps.processClusterName.outputs.clusterName }}", "version": "1231", "patch": "" }'
