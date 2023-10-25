@@ -11,7 +11,7 @@ const prettifiedData = require("../data/formatted_data.json");
 async function run() {
   await client.indices.create(
     {
-      index: "index_sinhala_poems",
+      index: "index_sinhala_poems_v2",
       body: {
         settings: {
           analysis: {
@@ -96,7 +96,7 @@ async function run() {
   const dataset = prettifiedData;
 
   const body = dataset.flatMap((doc) => [
-    { index: { _index: "index_sinhala_poems" } },
+    { index: { _index: "index_sinhala_poems_v2" } },
     doc,
   ]);
 
@@ -118,7 +118,7 @@ async function run() {
     console.log(erroredDocuments);
   }
 
-  const { body: count } = await client.count({ index: "index_sinhala_poems" });
+  const { body: count } = await client.count({ index: "index_sinhala_poems_v2" });
   console.log(count);
 }
 

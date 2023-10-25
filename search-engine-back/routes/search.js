@@ -82,7 +82,7 @@ router.post("/", async function (req, res) {
   console.log("1", query);
 
   var result = await client.search({
-    index: "index_sinhala_poems",
+    index: "index_sinhala_poems_v2",
     body: {
       size: size,
       _source: {
