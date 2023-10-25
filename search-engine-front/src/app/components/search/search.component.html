@@ -66,5 +66,22 @@
       {{ item.key }} ({{ item.doc_count }})
     </button>
   </mat-menu>
+  <button
+  mat-button
+  color="primary"
+  class="dropdown-button"
+  [matMenuTriggerFor]="menuComposer"
+>
+  Filter By Poem Name
+</button>
+  <mat-menu #menuComposer="matMenu">
+    <button
+      *ngFor="let item of aggregations.poemName_filter.buckets"
+      mat-menu-item
+      (click)="filterByPoemName(item.key)"
+    >
+      {{ item.key }} ({{ item.doc_count }})
+    </button>
+  </mat-menu>
 </div>
 <app-results [searchResult]="resultEvent"></app-results>

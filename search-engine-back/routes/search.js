@@ -13,23 +13,22 @@ router.post("/", async function (req, res) {
   var query = req.body.query;
   var query_words = query.trim().split(" ");
   var removing_query_words = [];
-  var size = 100;
+  var size = 200;
   var field_type = "";
-  var b_poet = 1;
-  var b_poemName = 1;
-  var b_book = 1;
-  var b_year = 1;
-  var b_line = 1;
-  var b_metophorMeaning = 1;
-  var b_metorphorTerms = 1;
-  var b_sourceDomain = 1;
-  var b_targetDomain = 1;
-  var metophor = false;
+  var weight_poet = 1;
+  var weight_poemName = 1;
+  var weight_book = 1;
+  var weight_year = 1;
+  var weight_line = 1;
+  var weight_metophorMeaning = 1;
+  var weight_metorphorTerms = 1;
+  var weight_sourceDomain = 1;
+  var weight_targetDomain = 1;
+  var metophorOnly = false;
   var range = 0;
   var sort_method = [];
 
   if (query_words.length > 8) {
-    // b_unformatted_lyrics = b_unformatted_lyrics + 2;
     field_type = "best_fields";
   } else {
     field_type = "cross_fields";
@@ -39,21 +38,21 @@ router.post("/", async function (req, res) {
       word = word.replace("යන්ගේ", "");
 
       if (named_entities.writer_names.includes(word)) {
-        b_poet = b_poet + 1;
+        weight_poet = weight_poet + 1;
       }
       if (keywords.write.includes(word)) {
-        b_poet = b_poet + 1;
+        weight_poet = weight_poet + 1;
         removing_query_words.push(word);
       }
       if (keywords.metorphor.includes(word)) {
-        metophor = true;
-        b_sourceDomain = b_sourceDomain + 2;
-        b_targetDomain = b_targetDomain + 2;
+        metophorOnly = true;
+        weight_sourceDomain = weight_sourceDomain + 2;
+        weight_targetDomain = weight_targetDomain + 2;
         
         removing_query_words.push(word);
       }
       if (keywords.meaning.includes(word)) {
-        b_metophorMeaning = b_metophorMeaning + 1;
+        weight_metophorMeaning = weight_metophorMeaning + 1;
         removing_query_words.push(word);
       }
       if (keywords.poem.includes(word)) {
@@ -68,21 +67,21 @@ router.post("/", async function (req, res) {
   }
 
   if (range == 0) {
-    size = 15;
+    size = 100;
   } else if (range > 0) {
     size = range;
   }
-  if (metophor) {
+  if (metophorOnly) {
     sort_method = [{ count: { order: "desc" } }];
   }
   console.log("2", removing_query_words);
   removing_query_words.forEach((word) => {
     query = query.replace(word, "");
   });
-  console.log("1", query);
+
 
   var result = await client.search({
-    index: "index_sinhala_poems_v2",
+    index: "index_sinhala_poems_v3",
     body: {
       size: size,
       _source: {
@@ -109,21 +108,21 @@ router.post("/", async function (req, res) {
               multi_match: {
                 query: query.trim(),
                 fields: [
-                  `poet^${b_poet}`,
-                  `metorphorTerms^${b_metorphorTerms}`,
-                  `sourceDomain^${b_sourceDomain}`,
-                  `targetDomain^${b_targetDomain}`,
-                  `line^${b_line}`,
-                  `poemName^${b_poemName}`,
-                  `book^${b_book}`,
-                  `year^${b_year}`,
-                  `metophorMeaning^${b_metophorMeaning}`,
+                  `poet^${weight_poet}`,
+                  `metorphorTerms^${weight_metorphorTerms}`,
+                  `sourceDomain^${weight_sourceDomain}`,
+                  `targetDomain^${weight_targetDomain}`,
+                  `line^${weight_line}`,
+                  `poemName^${weight_poemName}`,
+                  `book^${weight_book}`,
+                  `year^${weight_year}`,
+                  `metophorMeaning^${weight_metophorMeaning}`,
                 ],
                 operator: "or",
                 type: field_type,
               },
             },
-            metophor
+            metophorOnly
               ? {
                   range: {
                     count: {
@@ -150,6 +149,12 @@ router.post("/", async function (req, res) {
                   size: 10
               }
           },
+          "poemName_filter": {
+            terms: {
+                field: "poemName.raw",
+                size: 10
+            }
+        },
         }
     
     },

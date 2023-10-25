@@ -67,6 +67,18 @@ export class SearchComponent implements OnInit {
     this.resultEvent.emit(newArr);
   }
 
+  filterByPoemName(key) {
+    console.log(key);
+    const newArr = [];
+    this.hits.forEach((hit) => {
+      if (hit._source.poemName) {
+        if (hit._source.poemName === key) {
+          newArr.push(hit);
+        }
+      }
+    });
+    this.resultEvent.emit(newArr);
+  }
   // filter(key, count) {
   //   this.query = key + ' ' + this.query + ' ' + count;
   //   this.search();

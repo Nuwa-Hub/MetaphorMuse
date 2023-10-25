@@ -11,12 +11,12 @@ const prettifiedData = require("../data/formatted_data.json");
 async function run() {
   await client.indices.create(
     {
-      index: "index_sinhala_poems_v2",
+      index: "index_sinhala_poems_v3",
       body: {
         settings: {
           analysis: {
             analyzer: {
-              my_analyzer: {
+              key_analyzer: {
                 type: "custom",
                 tokenizer: "icu_tokenizer",
                 filter: ["customNgramFilter", "customStopWordFilter"],
@@ -33,22 +33,17 @@ async function run() {
                 type: "stop",
                 ignore_case: true,
                 stopwords: [
-                  "ගත්කරු",
-                  "රචකයා",
-                  "ලියන්නා",
+                  "ක්",
                   "ලියන",
                   "රචිත",
                   "ලියපු",
                   "ලියව්‌ව",
-                  "රචනා",
-                  "රචක",
+                  "රූපක",
+                  "රූපකය",
                   "ලියන්",
                   "ලිවූ",
-                  "වර්ගය",
-                  "වර්‍ගයේ",
-                  "වර්ගයේම",
-                  "වර්ගයේ",
                   "වැනි",
+                  "සේ",
                   "ඇතුලත්",
                   "ඇතුලු",
                 ],
@@ -65,10 +60,18 @@ async function run() {
                   type: "keyword",
                 },
               },
-              analyzer: "my_analyzer",
+              analyzer: "key_analyzer",
             },
             count: { type: "integer" },
-            poemName: { type: "text" },
+            poemName: {
+              type: "text",
+              fields: {
+                raw: {
+                  type: "keyword",
+                },
+              },
+              analyzer: "key_analyzer",
+            },
             book: { type: "text" },
             line: { type: "text" },
             year: { type: "text" },
@@ -80,7 +83,7 @@ async function run() {
                   type: "keyword",
                 },
               },
-              analyzer: "my_analyzer",
+              analyzer: "key_analyzer",
             },
             sourceDomain: { type: "text" },
             poemNo: { type: "integer" },
@@ -96,29 +99,16 @@ async function run() {
   const dataset = prettifiedData;
 
   const body = dataset.flatMap((doc) => [
-    { index: { _index: "index_sinhala_poems_v2" } },
+    { index: { _index: "index_sinhala_poems_v3" } },
     doc,
   ]);
 
   const { body: bulkResponse } = await client.bulk({ refresh: true, body });
 
-  if (bulkResponse.errors) {
-    const erroredDocuments = [];
-    bulkResponse.items.forEach((action, i) => {
-      const operation = Object.keys(action)[0];
-      if (action[operation].error) {
-        erroredDocuments.push({
-          status: action[operation].status,
-          error: action[operation].error,
-          operation: body[i * 2],
-          document: body[i * 2 + 1],
-        });
-      }
-    });
-    console.log(erroredDocuments);
-  }
 
-  const { body: count } = await client.count({ index: "index_sinhala_poems_v2" });
+  const { body: count } = await client.count({
+    index: "index_sinhala_poems_v3",
+  });
   console.log(count);
 }
 
