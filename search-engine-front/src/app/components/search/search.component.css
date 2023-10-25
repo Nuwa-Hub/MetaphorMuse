@@ -7,3 +7,6 @@
     display: inline-block;
     margin: 0 20px;
 }
+.mat-menu-item{
+    background-color: rgb(165, 172, 209);
+}

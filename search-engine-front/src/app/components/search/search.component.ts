@@ -1,13 +1,12 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { SearchService } from 'src/app/services/search.service';
+import { Component, OnInit, Output, EventEmitter } from "@angular/core";
+import { SearchService } from "src/app/services/search.service";
 
 @Component({
-  selector: 'app-search',
-  templateUrl: './search.component.html',
-  styleUrls: ['./search.component.css']
+  selector: "app-search",
+  templateUrl: "./search.component.html",
+  styleUrls: ["./search.component.css"],
 })
 export class SearchComponent implements OnInit {
-
   @Output() resultEvent: EventEmitter<any> = new EventEmitter();
   aggregations: any[];
   hits: any[];
@@ -15,75 +14,51 @@ export class SearchComponent implements OnInit {
   query: string;
   searched: boolean;
 
-  constructor(private searchService: SearchService) { }
+  constructor(private searchService: SearchService) {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   search() {
-    this.searchService.search(this.query).subscribe((result: {hits, aggs}) => {
-      this.resultEvent.emit(result.hits);
-      this.aggregations = result.aggs;
-      this.hits = result.hits;
-      this.searched = true;
-      console.log(result)
-    });
+    this.searchService
+      .search(this.query)
+      .subscribe((result: { hits; aggs }) => {
+        this.resultEvent.emit(result.hits);
+        this.aggregations = result.aggs;
+        this.hits = result.hits;
+        this.searched = true;
+      });
   }
 
   clear() {
-    this.query = '';
+    this.query = "";
     this.resultEvent.emit([]);
     this.searched = false;
   }
 
   filterByArtist(key) {
     const newArr = [];
-    this.hits.forEach(hit => {
-      if (hit._source.artist) {
-        hit._source.artist.forEach(artist => {
+    console.log(this.hits);
+    this.hits.forEach((hit) => {
+      if (hit._source.poet && Array.isArray(hit._source.poet)) {
+        console.log(hit._source.poet);
+        hit._source.poet.forEach((artist) => {
           if (artist === key) {
             newArr.push(hit);
           }
         });
       }
     });
+    console.log(newArr);
     this.resultEvent.emit(newArr);
   }
 
-  filterByMusic(key) {
+  filterByMetorphorTerms(key) {
+    console.log(key);
     const newArr = [];
-    this.hits.forEach(hit => {
-      if (hit._source.composer) {
-        hit._source.artist.forEach(composer => {
-          if (composer === key) {
-            newArr.push(hit);
-          }
-        });
-      }
-    });
-    this.resultEvent.emit(newArr);
-  }
-
-  filterByComposer(key) {
-    const newArr = [];
-    this.hits.forEach(hit => {
-      if (hit._source.writer) {
-        hit._source.writer.forEach(writer => {
-          if (writer === key) {
-            newArr.push(hit);
-          }
-        });
-      }
-    });
-    this.resultEvent.emit(newArr);
-  }
-
-  filterByGenre(key) {
-    const newArr = [];
-    this.hits.forEach(hit => {
-      if (hit._source.genre) {
-        hit._source.genre.forEach(genre => {
-          if (genre === key) {
+    this.hits.forEach((hit) => {
+      if (hit._source.metorphorTerms) {
+        hit._source.metorphorTerms.forEach((metorphorTerm) => {
+          if (metorphorTerm === key) {
             newArr.push(hit);
           }
         });
@@ -96,5 +71,4 @@ export class SearchComponent implements OnInit {
   //   this.query = key + ' ' + this.query + ' ' + count;
   //   this.search();
   // }
-
 }

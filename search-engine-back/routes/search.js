@@ -22,19 +22,14 @@ router.post("/", async function (req, res) {
   var b_line = 1;
   var b_metophorMeaning = 1;
   var b_metorphorTerms = 1;
-  var b_sourceDomain = 2;
+  var b_sourceDomain = 1;
   var b_targetDomain = 1;
-  var b_metaphorPresentOrNot = 1;
-  var b_count = 1;
-  var b_poemNo = 1;
   var metophor = false;
-  var b_unformatted_lyrics = 1;
-  var sorting = 0;
   var range = 0;
   var sort_method = [];
 
   if (query_words.length > 8) {
-    b_unformatted_lyrics = b_unformatted_lyrics + 2;
+    // b_unformatted_lyrics = b_unformatted_lyrics + 2;
     field_type = "best_fields";
   } else {
     field_type = "cross_fields";
@@ -43,34 +38,8 @@ router.post("/", async function (req, res) {
       word = word.replace("ගේ", "");
       word = word.replace("යන්ගේ", "");
 
-      if (named_entities.artist_names.includes(word)) {
-        b_artist = b_artist + 1;
-      }
       if (named_entities.writer_names.includes(word)) {
         b_poet = b_poet + 1;
-      }
-      if (named_entities.composer_names.includes(word)) {
-        b_composer = b_composer + 1;
-      }
-      if (named_entities.genre_names.includes(word)) {
-        b_genre = b_genre + 1;
-      }
-      if (named_entities.movie_names.includes(word)) {
-        b_movie = b_movie + 1;
-      }
-
-      if (keywords.artist.includes(word)) {
-        b_artist = b_artist + 1;
-        removing_query_words.push(word);
-      }
-      if (keywords.composer.includes(word)) {
-        b_composer = b_composer + 1;
-        removing_query_words.push(word);
-      }
-
-      if (keywords.genre.includes(word)) {
-        b_genre = b_genre + 1;
-        removing_query_words.push(word);
       }
       if (keywords.write.includes(word)) {
         b_poet = b_poet + 1;
@@ -78,30 +47,32 @@ router.post("/", async function (req, res) {
       }
       if (keywords.metorphor.includes(word)) {
         metophor = true;
+        b_sourceDomain = b_sourceDomain + 2;
+        b_targetDomain = b_targetDomain + 2;
+        
         removing_query_words.push(word);
-  
+      }
+      if (keywords.meaning.includes(word)) {
+        b_metophorMeaning = b_metophorMeaning + 1;
+        removing_query_words.push(word);
       }
       if (keywords.poem.includes(word)) {
         removing_query_words.push(word);
       }
-
-      if (keywords.sorting.includes(word)) {
-        sorting = sorting + 1;
-        removing_query_words.push(word);
-      }
       let numbersArray = word.match(/\d+/g);
       if (numbersArray) {
-        console.log(word);
         range = parseInt(numbersArray[0]);
         removing_query_words.push(word);
       }
     });
   }
-  if (range == 0 && sorting > 0) {
-    size = 10;
-    sort_method = [{ count: { order: "desc" } }];
-  } else if (range > 0 || sorting > 0) {
+
+  if (range == 0) {
+    size = 15;
+  } else if (range > 0) {
     size = range;
+  }
+  if (metophor) {
     sort_method = [{ count: { order: "desc" } }];
   }
   console.log("2", removing_query_words);
@@ -166,32 +137,21 @@ router.post("/", async function (req, res) {
           ],
         },
       },
-      // aggs: {
-      //     "genre_filter": {
-      //         terms: {
-      //             field: "genre.raw",
-      //             size: 10
-      //         }
-      //     },
-      //     "composer_filter": {
-      //         terms: {
-      //             field: "composer.raw",
-      //             size: 10
-      //         }
-      //     },
-      //     "artist_filter": {
-      //         terms: {
-      //             field: "artist.raw",
-      //             size: 10
-      //         }
-      //     },
-      //     "writer_filter": {
-      //         terms: {
-      //             field: "writer.raw",
-      //             size: 10
-      //         }
-      //     }
-      // }
+        aggs: {
+          "poet_filter": {
+              terms: {
+                  field: "poet.raw",
+                  size: 10
+              }
+          },
+          "metorphorTerms_filter": {
+              terms: {
+                  field: "metorphorTerms.raw",
+                  size: 10
+              }
+          },
+        }
+    
     },
   });
 
